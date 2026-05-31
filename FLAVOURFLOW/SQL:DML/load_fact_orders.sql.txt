@@ -1,0 +1,22 @@
+INSERT INTO dw.fact_orders
+    (order_id, customer_key, restaurant_key, driver_key,
+     date_key, total_cost, delivery_time, rating, quantity)
+SELECT
+    o.order_id,
+    c.customer_key,
+    r.restaurant_key,
+    d.driver_key,
+    CAST(FORMAT(CAST(o.order_date AS DATE), 'yyyyMMdd') AS INT) AS date_key,
+    CAST(o.total_cost    AS DECIMAL(12,2)),
+    CAST(o.delivery_time AS INT),
+    CAST(o.rating        AS DECIMAL(3,2)),
+    CAST(o.quantity      AS INT)
+FROM staging.stg_orders o
+JOIN dw.dim_customer   c ON c.customer_id   = o.customer_id
+JOIN dw.dim_restaurant r ON r.restaurant_id = o.restaurant_id
+LEFT JOIN dw.dim_driver d ON d.driver_id    = o.driver_id
+WHERE o.order_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM dw.fact_orders f
+      WHERE f.order_id = o.order_id
+  );

@@ -1,0 +1,29 @@
+DROP TABLE IF EXISTS dw.fact_orders;
+CREATE TABLE dw.fact_orders (
+    order_id       NVARCHAR(50) PRIMARY KEY,
+    customer_key   INT NOT NULL,
+    restaurant_key INT NOT NULL,
+    driver_key     INT NULL,
+    date_key       INT NOT NULL,
+    total_cost     DECIMAL(12,2) NOT NULL,
+    delivery_time  INT NOT NULL,
+    rating         DECIMAL(3,2) NULL,
+    quantity       INT NOT NULL,
+    CONSTRAINT fk_fact_customer
+        FOREIGN KEY (customer_key)
+        REFERENCES dw.dim_customer(customer_key),
+    CONSTRAINT fk_fact_restaurant
+        FOREIGN KEY (restaurant_key)
+        REFERENCES dw.dim_restaurant(restaurant_key),
+    CONSTRAINT fk_fact_driver
+        FOREIGN KEY (driver_key)
+        REFERENCES dw.dim_driver(driver_key),
+    CONSTRAINT fk_fact_date
+        FOREIGN KEY (date_key)
+        REFERENCES dw.dim_date(date_key)
+);
+
+CREATE INDEX ix_fact_customer   ON dw.fact_orders(customer_key);
+CREATE INDEX ix_fact_restaurant ON dw.fact_orders(restaurant_key);
+CREATE INDEX ix_fact_driver     ON dw.fact_orders(driver_key);
+CREATE INDEX ix_fact_date       ON dw.fact_orders(date_key);

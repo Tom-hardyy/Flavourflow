@@ -1,0 +1,51 @@
+import os
+import pandas as pd
+import sqlalchemy as sa
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_engine():
+    server = os.getenv('DB_SERVER')
+    db     = os.getenv('DB_NAME')
+    user   = os.getenv('DB_USER')
+    pwd    = os.getenv('DB_PASSWORD')
+    driver = os.getenv('DB_DRIVER', 'ODBC Driver 17 for SQL Server')
+    conn = (
+        f"mssql+pyodbc://{user}:{pwd}@{server}/{db}"
+        f"?driver={driver.replace(' ', '+')}"
+    )
+    return sa.create_engine(conn, fast_executemany=True)
+
+def run_stage():
+    engine = get_engine()
+    landing = os.getenv('LANDING_PATH', '/data/landing')
+    from datetime import datetime
+    today = datetime.utcnow().strftime('%Y/%m/%d')
+    path = os.path.join(landing, today)
+
+    table_map = {
+        'orders.csv':      'stg_orders',
+        'customers.csv':   'stg_customers',
+        'restaurants.csv': 'stg_restaurants',
+        'drivers.csv':     'stg_drivers',
+    }
+
+    for file, table in table_map.items():
+        fp = os.path.join(path, file)
+        if os.path.exists(fp):
+            df = pd.read_csv(fp, dtype=str)
+            df.columns = [c.strip().lower() for c in df.columns]
+            df.to_sql(
+                table,
+                engine,
+                schema='staging',
+                if_exists='replace',
+                index=False,
+            )
+            print(f'Staged {len(df)} rows -> staging.{table}')
+        else:
+            print(f'WARNING: File not found for staging: {fp}')
+
+if __name__ == '__main__':
+    run_stage()

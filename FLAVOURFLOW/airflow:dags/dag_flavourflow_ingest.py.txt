@@ -1,0 +1,28 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+import sys
+sys.path.insert(0, '/opt/airflow/etl')
+from ingest import run_ingest
+
+default_args = {
+    'owner': 'thomas_hardy',
+    'retries': 2,
+    'retry_delay': timedelta(minutes=5),
+    'email_on_failure': True,
+}
+
+with DAG(
+    dag_id='dag_flavourflow_ingest',
+    default_args=default_args,
+    description='Ingest raw source files to landing zone',
+    schedule_interval='0 2 * * *',
+    start_date=datetime(2026, 2, 20),
+    catchup=False,
+    tags=['flavourflow', 'ingest'],
+) as dag:
+
+    ingest_task = PythonOperator(
+        task_id='ingest_source_files',
+        python_callable=run_ingest,
+    )

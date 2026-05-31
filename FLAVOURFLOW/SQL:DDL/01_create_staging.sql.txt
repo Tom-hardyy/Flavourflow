@@ -1,0 +1,51 @@
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'staging')
+    EXEC('CREATE SCHEMA staging');
+
+DROP TABLE IF EXISTS staging.stg_orders;
+DROP TABLE IF EXISTS staging.stg_customers;
+DROP TABLE IF EXISTS staging.stg_restaurants;
+DROP TABLE IF EXISTS staging.stg_drivers;
+
+CREATE TABLE staging.stg_customers (
+    customer_id       NVARCHAR(50),
+    first_name        NVARCHAR(100),
+    last_name         NVARCHAR(100),
+    customer_email    NVARCHAR(255),
+    customer_phone    NVARCHAR(50),
+    customer_city     NVARCHAR(100),
+    customer_state    NVARCHAR(50),
+    customer_postcode NVARCHAR(20)
+);
+
+CREATE TABLE staging.stg_restaurants (
+    restaurant_id       NVARCHAR(50),
+    restaurant_name     NVARCHAR(200),
+    cuisine_type        NVARCHAR(100),
+    restaurant_phone    NVARCHAR(50),
+    restaurant_city     NVARCHAR(100),
+    restaurant_state    NVARCHAR(50),
+    restaurant_postcode NVARCHAR(20),
+    price_category      NVARCHAR(20)
+);
+
+CREATE TABLE staging.stg_drivers (
+    driver_id      NVARCHAR(50),
+    first_name     NVARCHAR(100),
+    last_name      NVARCHAR(100),
+    phone          NVARCHAR(50),
+    vehicle_type   NVARCHAR(50),
+    license_number NVARCHAR(50),
+    status         NVARCHAR(50)
+);
+
+CREATE TABLE staging.stg_orders (
+    order_id      NVARCHAR(50),
+    customer_id   NVARCHAR(50),
+    restaurant_id NVARCHAR(50),
+    driver_id     NVARCHAR(50),
+    order_date    NVARCHAR(20),
+    total_cost    NVARCHAR(20),
+    delivery_time NVARCHAR(20),
+    rating        NVARCHAR(20),
+    quantity      NVARCHAR(20)
+);

@@ -1,0 +1,52 @@
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'dw')
+    EXEC('CREATE SCHEMA dw');
+
+DROP TABLE IF EXISTS dw.dim_customer;
+CREATE TABLE dw.dim_customer (
+    customer_key      INT IDENTITY(1,1) PRIMARY KEY,
+    customer_id       NVARCHAR(50) NOT NULL UNIQUE,
+    first_name        NVARCHAR(100),
+    last_name         NVARCHAR(100),
+    customer_email    NVARCHAR(255),
+    customer_phone    NVARCHAR(50),
+    customer_city     NVARCHAR(100),
+    customer_state    NVARCHAR(50),
+    customer_postcode NVARCHAR(20)
+);
+
+DROP TABLE IF EXISTS dw.dim_restaurant;
+CREATE TABLE dw.dim_restaurant (
+    restaurant_key      INT IDENTITY(1,1) PRIMARY KEY,
+    restaurant_id       NVARCHAR(50) NOT NULL UNIQUE,
+    restaurant_name     NVARCHAR(200),
+    cuisine_type        NVARCHAR(100),
+    restaurant_phone    NVARCHAR(50),
+    restaurant_city     NVARCHAR(100),
+    restaurant_state    NVARCHAR(50),
+    restaurant_postcode NVARCHAR(20),
+    price_category      NVARCHAR(20)
+);
+
+DROP TABLE IF EXISTS dw.dim_driver;
+CREATE TABLE dw.dim_driver (
+    driver_key     INT IDENTITY(1,1) PRIMARY KEY,
+    driver_id      NVARCHAR(50) NOT NULL UNIQUE,
+    first_name     NVARCHAR(100),
+    last_name      NVARCHAR(100),
+    phone          NVARCHAR(50),
+    vehicle_type   NVARCHAR(50),
+    license_number NVARCHAR(50),
+    status         NVARCHAR(50)
+);
+
+DROP TABLE IF EXISTS dw.dim_date;
+CREATE TABLE dw.dim_date (
+    date_key    INT PRIMARY KEY,
+    full_date   DATE NOT NULL,
+    day         TINYINT,
+    month       TINYINT,
+    month_name  NVARCHAR(20),
+    year        SMALLINT,
+    day_of_week NVARCHAR(10),
+    is_weekend  BIT
+);

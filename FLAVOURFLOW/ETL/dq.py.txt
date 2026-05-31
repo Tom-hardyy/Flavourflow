@@ -1,0 +1,64 @@
+import os
+import sqlalchemy as sa
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_engine():
+    server = os.getenv('DB_SERVER')
+    db     = os.getenv('DB_NAME')
+    user   = os.getenv('DB_USER')
+    pwd    = os.getenv('DB_PASSWORD')
+    driver = os.getenv('DB_DRIVER', 'ODBC Driver 17 for SQL Server')
+    conn = (
+        f"mssql+pyodbc://{user}:{pwd}@{server}/{db}"
+        f"?driver={driver.replace(' ', '+')}"
+    )
+    return sa.create_engine(conn)
+
+def run_dq_checks():
+    engine = get_engine()
+    checks = [
+        ("Null Customer_ID",
+         "SELECT COUNT(*) FROM dw.dim_customer WHERE customer_id IS NULL"),
+        ("Null Restaurant_ID",
+         "SELECT COUNT(*) FROM dw.dim_restaurant WHERE restaurant_id IS NULL"),
+        ("Null Driver_ID",
+         "SELECT COUNT(*) FROM dw.dim_driver WHERE driver_id IS NULL"),
+        ("Orphaned Customer_Key in Fact",
+         """SELECT COUNT(*) FROM dw.fact_orders f
+            WHERE NOT EXISTS (
+              SELECT 1 FROM dw.dim_customer c
+              WHERE c.customer_key = f.customer_key)"""),
+        ("Orphaned Restaurant_Key in Fact",
+         """SELECT COUNT(*) FROM dw.fact_orders f
+            WHERE NOT EXISTS (
+              SELECT 1 FROM dw.dim_restaurant r
+              WHERE r.restaurant_key = f.restaurant_key)"""),
+        ("Negative Delivery_Time",
+         "SELECT COUNT(*) FROM dw.fact_orders WHERE delivery_time < 0"),
+        ("Negative Total_Cost",
+         "SELECT COUNT(*) FROM dw.fact_orders WHERE total_cost < 0"),
+        ("Rating out of range",
+         "SELECT COUNT(*) FROM dw.fact_orders WHERE rating < 1 OR rating > 5"),
+        ("Duplicate Order_ID",
+         """SELECT COUNT(*) FROM (
+              SELECT order_id FROM dw.fact_orders
+              GROUP BY order_id HAVING COUNT(*) > 1) d"""),
+    ]
+
+    failed = []
+    with engine.connect() as conn:
+        for name, sql in checks:
+            result = conn.execute(sa.text(sql)).scalar()
+            status = 'PASS' if result == 0 else 'FAIL'
+            print(f'[{status}] {name}: {result} issue(s)')
+            if result > 0:
+                failed.append(name)
+
+    if failed:
+        raise ValueError(f'DQ checks failed: {failed}')
+    print('All DQ checks passed.')
+
+if __name__ == '__main__':
+    run_dq_checks()

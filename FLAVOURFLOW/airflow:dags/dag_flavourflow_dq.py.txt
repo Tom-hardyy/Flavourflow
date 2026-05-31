@@ -1,0 +1,27 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+import sys
+sys.path.insert(0, '/opt/airflow/etl')
+from dq import run_dq_checks
+
+default_args = {
+    'owner': 'thomas_hardy',
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+with DAG(
+    dag_id='dag_flavourflow_dq',
+    default_args=default_args,
+    description='Data quality checks on DW tables',
+    schedule_interval='0 5 * * *',
+    start_date=datetime(2026, 2, 20),
+    catchup=False,
+    tags=['flavourflow', 'dq'],
+) as dag:
+
+    dq_task = PythonOperator(
+        task_id='run_dq_checks',
+        python_callable=run_dq_checks,
+    )

@@ -1,0 +1,24 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+import sys
+sys.path.insert(0, '/opt/airflow/etl')
+from stage import run_stage
+default_args = {
+    'owner': 'thomas_hardy',
+    'retries': 2,
+    'retry_delay': timedelta(minutes=5),
+}
+with DAG(
+    dag_id='dag_flavourflow_stage',
+    default_args=default_args,
+    description='Load landing files into staging tables',
+    schedule_interval='0 3 * * *',
+    start_date=datetime(2026, 2, 20),
+    catchup=False,
+    tags=['flavourflow', 'stage'],
+) as dag:
+    stage_task = PythonOperator(
+        task_id='load_staging_tables',
+        python_callable=run_stage,
+    )

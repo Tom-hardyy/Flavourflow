@@ -1,0 +1,51 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+import sys
+sys.path.insert(0, '/opt/airflow/etl')
+from transform import (
+    build_dim_customer,
+    build_dim_restaurant,
+    build_dim_driver,
+    build_dim_date,
+    build_fact_orders,
+)
+
+default_args = {
+    'owner': 'thomas_hardy',
+    'retries': 2,
+    'retry_delay': timedelta(minutes=5),
+}
+
+with DAG(
+    dag_id='dag_flavourflow_transform',
+    default_args=default_args,
+    description='Transform staging data into star schema',
+    schedule_interval='0 4 * * *',
+    start_date=datetime(2026, 2, 20),
+    catchup=False,
+    tags=['flavourflow', 'transform'],
+) as dag:
+
+    t_customer = PythonOperator(
+        task_id='build_dim_customer',
+        python_callable=build_dim_customer,
+    )
+    t_restaurant = PythonOperator(
+        task_id='build_dim_restaurant',
+        python_callable=build_dim_restaurant,
+    )
+    t_driver = PythonOperator(
+        task_id='build_dim_driver',
+        python_callable=build_dim_driver,
+    )
+    t_date = PythonOperator(
+        task_id='build_dim_date',
+        python_callable=build_dim_date,
+    )
+    t_fact = PythonOperator(
+        task_id='build_fact_orders',
+        python_callable=build_fact_orders,
+    )
+
+    [t_customer, t_restaurant, t_driver, t_date] >> t_fact

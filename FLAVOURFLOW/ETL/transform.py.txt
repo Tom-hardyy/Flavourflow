@@ -1,0 +1,106 @@
+import os
+import pandas as pd
+import sqlalchemy as sa
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_engine():
+    server = os.getenv('DB_SERVER')
+    db     = os.getenv('DB_NAME')
+    user   = os.getenv('DB_USER')
+    pwd    = os.getenv('DB_PASSWORD')
+    driver = os.getenv('DB_DRIVER', 'ODBC Driver 17 for SQL Server')
+    conn = (
+        f"mssql+pyodbc://{user}:{pwd}@{server}/{db}"
+        f"?driver={driver.replace(' ', '+')}"
+    )
+    return sa.create_engine(conn, fast_executemany=True)
+
+def build_dim_customer():
+    engine = get_engine()
+    df = pd.read_sql('SELECT * FROM staging.stg_customers', engine)
+    df.columns = [c.strip().lower() for c in df.columns]
+    df['customer_city']     = df['customer_city'].str.strip().str.title()
+    df['customer_state']    = df['customer_state'].str.strip().str.upper()
+    df['customer_postcode'] = df['customer_postcode'].str.strip()
+    df = df.drop_duplicates(subset=['customer_id'])
+    df.to_sql('dim_customer', engine, schema='dw',
+              if_exists='replace', index=False)
+    print(f'Dim_Customer loaded: {len(df)} rows')
+
+def build_dim_restaurant():
+    engine = get_engine()
+    df = pd.read_sql('SELECT * FROM staging.stg_restaurants', engine)
+    df.columns = [c.strip().lower() for c in df.columns]
+    df['restaurant_city']  = df['restaurant_city'].str.strip().str.title()
+    df['restaurant_state'] = df['restaurant_state'].str.strip().str.upper()
+    df['cuisine_type']     = df['cuisine_type'].str.strip().str.title()
+    df = df.drop_duplicates(subset=['restaurant_id'])
+    df.to_sql('dim_restaurant', engine, schema='dw',
+              if_exists='replace', index=False)
+    print(f'Dim_Restaurant loaded: {len(df)} rows')
+
+def build_dim_driver():
+    engine = get_engine()
+    df = pd.read_sql('SELECT * FROM staging.stg_drivers', engine)
+    df.columns = [c.strip().lower() for c in df.columns]
+    df['vehicle_type'] = df['vehicle_type'].str.strip().str.title()
+    df['status']       = df['status'].str.strip().str.title()
+    df = df.drop_duplicates(subset=['driver_id'])
+    df.to_sql('dim_driver', engine, schema='dw',
+              if_exists='replace', index=False)
+    print(f'Dim_Driver loaded: {len(df)} rows')
+
+def build_dim_date():
+    engine = get_engine()
+    dates = pd.date_range(start='2020-01-01', end='2030-12-31', freq='D')
+    df = pd.DataFrame({
+        'date_key':    dates.strftime('%Y%m%d').astype(int),
+        'full_date':   dates.date,
+        'day':         dates.day,
+        'month':       dates.month,
+        'month_name':  dates.strftime('%B'),
+        'year':        dates.year,
+        'day_of_week': dates.strftime('%A'),
+        'is_weekend':  (dates.dayofweek >= 5).astype(int),
+    })
+    df.to_sql('dim_date', engine, schema='dw',
+              if_exists='replace', index=False)
+    print(f'Dim_Date loaded: {len(df)} rows')
+
+def build_fact_orders():
+    engine = get_engine()
+    orders = pd.read_sql('SELECT * FROM staging.stg_orders', engine)
+    orders.columns = [c.strip().lower() for c in orders.columns]
+
+    cust = pd.read_sql(
+        'SELECT customer_id, customer_key FROM dw.dim_customer', engine)
+    rest = pd.read_sql(
+        'SELECT restaurant_id, restaurant_key FROM dw.dim_restaurant', engine)
+    drv  = pd.read_sql(
+        'SELECT driver_id, driver_key FROM dw.dim_driver', engine)
+
+    fact = orders.merge(cust, on='customer_id', how='left')
+    fact = fact.merge(rest, on='restaurant_id', how='left')
+    fact = fact.merge(drv,  on='driver_id',     how='left')
+
+    fact['date_key'] = pd.to_datetime(
+        fact['order_date']).dt.strftime('%Y%m%d').astype(int)
+
+    fact = fact[[
+        'order_id', 'customer_key', 'restaurant_key',
+        'driver_key', 'date_key', 'total_cost',
+        'delivery_time', 'rating', 'quantity'
+    ]]
+
+    fact.to_sql('fact_orders', engine, schema='dw',
+                if_exists='append', index=False)
+    print(f'Fact_Orders loaded: {len(fact)} rows')
+
+if __name__ == '__main__':
+    build_dim_customer()
+    build_dim_restaurant()
+    build_dim_driver()
+    build_dim_date()
+    build_fact_orders()

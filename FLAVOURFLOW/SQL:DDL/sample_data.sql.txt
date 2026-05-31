@@ -1,0 +1,48 @@
+INSERT INTO dw.dim_customer
+    (customer_id, first_name, last_name, customer_email,
+     customer_phone, customer_city, customer_state, customer_postcode)
+VALUES
+    ('100','Joe','Smith','Joe.Smith@email.com',
+     '412355678','Sydney','NSW','2000'),
+    ('101','Tom','Doe','Tom.Doe@email.com',
+     '412234567','Melbourne','VIC','3000'),
+    ('102','Sam','Hart','Sam.Hart@email.com',
+     '412334567','Perth','WA','6000');
+
+INSERT INTO dw.dim_restaurant
+    (restaurant_id, restaurant_name, cuisine_type, restaurant_phone,
+     restaurant_city, restaurant_state, restaurant_postcode, price_category)
+VALUES
+    ('111','Dominos','Italian','412345679',
+     'Sydney','NSW','2000','Medium'),
+    ('112','McDonalds','American','413345678',
+     'Melbourne','VIC','3000','Low'),
+    ('113','Sushi Hub','Japanese','441445678',
+     'Perth','WA','6000','High');
+
+INSERT INTO dw.dim_driver
+    (driver_id, first_name, last_name, phone,
+     vehicle_type, license_number, status)
+VALUES
+    ('320','David','Lee','413456654',
+     'Motorbike','NSW123456','Active'),
+    ('321','Josh','Hunt','412345543',
+     'Car','TAS135797','Inactive'),
+    ('322','John','Carr','412053053',
+     'Bicycle','VIC123654','Active');
+
+INSERT INTO dw.dim_date
+    (date_key, full_date, day, month,
+     month_name, year, day_of_week, is_weekend)
+VALUES
+    (20260301,'2026-03-01',1,3,'March',2026,'Friday',0),
+    (20260302,'2026-03-02',2,3,'March',2026,'Saturday',1),
+    (20260303,'2026-03-03',3,3,'March',2026,'Sunday',1);
+
+INSERT INTO dw.fact_orders
+    (order_id, customer_key, restaurant_key, driver_key,
+     date_key, total_cost, delivery_time, rating, quantity)
+VALUES
+    ('1000',1,1,1,20260301,40.00,40,5,4),
+    ('1001',2,2,2,20260302,35.95,35,2,2),
+    ('1002',3,3,3,20260303,34.50,25,3,3);

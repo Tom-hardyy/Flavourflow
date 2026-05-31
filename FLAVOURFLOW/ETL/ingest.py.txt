@@ -1,0 +1,31 @@
+import os
+import shutil
+from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
+LANDING_PATH = os.getenv('LANDING_PATH', '/data/landing')
+SOURCE_PATH = '/data/source'
+
+def run_ingest():
+    today = datetime.utcnow().strftime('%Y/%m/%d')
+    dest = os.path.join(LANDING_PATH, today)
+    os.makedirs(dest, exist_ok=True)
+
+    files = [
+        'orders.csv',
+        'customers.csv',
+        'restaurants.csv',
+        'drivers.csv',
+    ]
+
+    for f in files:
+        src = os.path.join(SOURCE_PATH, f)
+        if os.path.exists(src):
+            shutil.copy2(src, os.path.join(dest, f))
+            print(f'Ingested: {f} -> {dest}')
+        else:
+            print(f'WARNING: Source file not found: {src}')
+
+if __name__ == '__main__':
+    run_ingest()
