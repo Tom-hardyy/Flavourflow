@@ -508,6 +508,12 @@
         <mxCell id="tuGEGZtfNVEa2kEIe_wz-52" parent="tuGEGZtfNVEa2kEIe_wz-50" style="swimlane;startSize=20;html=1;strokeColor=#D0CEE2;fontColor=#1A1A1A;fillColor=#5D7F99;" value="ETL PROCESS" vertex="1">
           <mxGeometry height="460" width="120" x="123" y="20" as="geometry" />
         </mxCell>
+        <mxCell id="pw-m__3t20aXKzfT3pRa-15" parent="tuGEGZtfNVEa2kEIe_wz-52" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#D0CEE2;fontColor=#1A1A1A;fillColor=#5D7F99;" value="EXTRACT DRIVER DATA" vertex="1">
+          <mxGeometry height="28" width="110" x="9.999999999999545" y="367" as="geometry" />
+        </mxCell>
+        <mxCell id="pw-m__3t20aXKzfT3pRa-16" parent="tuGEGZtfNVEa2kEIe_wz-52" style="rhombus;whiteSpace=wrap;html=1;strokeColor=#D0CEE2;fontColor=#1A1A1A;fillColor=#5D7F99;" value="" vertex="1">
+          <mxGeometry height="80" width="80" x="19.999999999999545" y="380" as="geometry" />
+        </mxCell>
         <mxCell id="tuGEGZtfNVEa2kEIe_wz-53" parent="tuGEGZtfNVEa2kEIe_wz-50" style="swimlane;startSize=20;html=1;strokeColor=#D0CEE2;fontColor=#1A1A1A;fillColor=#5D7F99;" value="DATA WAREHOUSE" vertex="1">
           <mxGeometry height="460" width="120" x="243" y="20" as="geometry" />
         </mxCell>
